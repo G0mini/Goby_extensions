@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Qax_Hunter-查询</title>
+  <link rel="stylesheet" href="assets/lib/layui/css/layui.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/font/iconfont.css">
+</head>
+
+<body>
+  <div class="layui-form-item clearfix">
+    <div class="layui-input-block marLeft0 fl search-input-wrap">
+      <input id="fofa-input" type="text" name="title" required lay-verify="required" data-i18n="[placeholder]Please enter the query rule"
+        autocomplete="off"
+        class="layui-input">
+      <span class="fofa-search"><i class="iconfont iconfangdajing"></i></span>
+    </div>
+    <button class="layui-btn export-ip fr" lay-submit lay-filter="formDemo" data-i18n="Import"></button>
+  </div>
+  <div class="layui-table-wrap">
+    <table lay-filter="demo" id="ip-table" class="layui-table">
+      <thead>
+        <tr>
+          <th min-width="50">host</th>
+          <th min-width="50">IP</th>
+          <th min-width="50">port</th>
+          <th min-width="50">title</th>
+        </tr> 
+      </thead>
+      <tbody>
+        <tr>
+        </tr>
+      </tbody>
+    </table>
+    <div class="no-data">
+    </div>
+    <div class="loading">
+      <i class="layui-icon layui-icon-loading layui-anim layui-anim-rotate layui-anim-loop"></i>
+    </div>
+  </div>
+  <div id="page"></div>
+  <span data-i18n="description"></span>
+  <script src="assets/js/jquery-3.3.1.min.js"></script>
+  <script src="assets/js/jquery.i18next.js"></script>
+  <script src="assets/js/jquery.base64.js"></script>
+  <script src="assets/lib/layui/layui.all.js"></script>
+  <script>
+    
+    let goby = parent.goby; // 获取GobyAPi
+    let fs = parent.require('fs');
+    let results = []; // 定义搜索结果数组
+    let net = parent.require('net')
+    // 字符串转base64
+    function encode(str){
+      var base64 = $.base64.encode(str);
+      return base64;
+    }
+
+    function lang(){
+      //获取当前Languzge
+      let language = goby.getLang();
+
+      //判断翻译文件是否存在
+      let translateState = fs.existsSync(goby.__dirname + '/assets/translate/' + language+'/html.json');
+
+      //翻译文件存在则使用翻译文件,否则使用默认EN翻译
+      let lang = translateState?language:'EN';
+
+      let a = $.i18n.init({
+        lng: language, //指定语言
+        useCookie:false,
+        resGetPath: './assets/translate/'+lang+'/html.json',//语言包的路径
+      }, function(err, t) {
+        if(!err){
+          $('[data-i18n]').i18n(); // 通过选择器集体翻译
+          return;
+        }
+        goby.showErrorMessage(err)
+      });
+    }
+
+    lang();
+    
+    //当lang改变时更新页面内容
+    goby.bindEvent('onChangeLang',()=>{
+      lang();
+    })
+    
+    // 查询数据
+    function getData(page, type) {
+      results = [];
+      $(".no-data").hide();
+      $(".loading").show();
+      $("#ip-table tbody").html("");
+      let config = goby.getConfiguration(); // 获取插件配置
+      let email = config.Name.default;
+      let key = config.Key.default;
+      let size = config.Size.default; // HunterApi size
+      let content = $("#fofa-input").val(); // 调用HunterApi搜索
+      if(net.isIP(content.trim())){//判断是否为ip,如果是ip,则补全为ip=""
+        let ip = content.trim();
+        if(!IsLAN(ip)){
+          content=`ip="${content.trim()}"`;
+          $("#fofa-input").val(content);
+        }
+      }
+      let qbase64 = encode(content);
+      let page_size=size*10;
+      let url = `https://hunter.qianxin.com/openApi/search?username=${email}&api-key=${key}&search=${qbase64}&page=${page}&page_size=${page_size}`
+      $.ajax({
+        async:false,
+        type: "get",
+        url: url,
+        contentType: 'application/x-www-form-urlencoded;charset=utf-8',
+        dataType: "json",
+        success(res) {
+          if(res.error){
+            $(".loading").hide();
+            goby.showErrorMessage(res.errmsg)
+            $(".no-data").html(res.errmsg);
+            results = [];
+            let html = "";
+            $("#ip-table tbody").html(html);
+            $(".no-data").show();
+            $(".loading").hide();
+            return;
+          }
+          results = res.data.arr;
+          if (results && results.length > 0) {  
+            let html = "";
+           // res.results.forEach((v, k) => {
+            len=res.data.arr.length;
+
+            for (let num=0; num<len ;num++){
+              result_url=res.data.arr[num]['url']
+              result_ip=res.data.arr[num]['ip']
+              result_port=res.data.arr[num]['port']
+              result_title=res.data.arr[num]['web_title']
+              html += `<tr>
+                  <td>${result_url}</td>
+                  <td>${result_ip}</td>
+                  <td>${result_port}</td>
+                  <td>${result_title}</td>
+                </tr>`
+            }
+            
+
+            $("#ip-table tbody").html(html);
+            if (type) {
+              var laypage = layui.laypage;
+              laypage.render({
+                elem: 'page', 
+                limit: size,
+                count: res.size,
+                jump: function(obj, first) {
+                  getData(obj.curr);
+                  console.log(res.size)
+                }
+              });
+            }
+          } else {
+            $(".no-data").show();
+            $("#ip-table tbody").html("");
+            $(".no-data").html(content + " 0");
+          }
+           $(".loading").hide();
+        },
+        error(res) {
+          goby.showErrorMessage(JSON.parse(res.responseText).errmsg);
+          $(".no-data").html(JSON.parse(res.responseText).errmsg);
+          
+          results = [];
+          let html = "";
+          $("#ip-table tbody").html(html);
+          $(".no-data").show();
+          $(".loading").hide();
+        }
+      });
+    }
+  
+
+    // 回车搜索
+    $("#fofa-input").keydown(function(e) {
+      if(e.keyCode == 13) {  
+        getData(1, 1);
+      }
+    });
+
+    // 按钮搜索
+    $(".fofa-search").click(function() {
+      getData(1, 1);
+    });
+
+    // 导出Ip和端口
+    $(".export-ip").on("click", function() {
+      if (results && results.length > 0) {
+        let ips = [];
+        let ports = [];
+        for (let num=0; num<len ;num++){
+              result_url=results[num]['url']
+              result_ip=results[num]['ip']
+              result_port=results[num]['port']
+              result_title=results[num]['web_title']
+        // results.forEach((v, k) => {
+             let reg = /^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$/ig;
+          // if(!v[1].match(reg)){
+          //   let domainReg = /[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?/;
+          //   let domain = v[0].match(domainReg);
+          //   ips.push((domain && domain[0]) || v[1]);
+          //   ports.push(v[4]=="udp"?`U:${v[2]}`:v[2]);
+           if(!result_ip.match(reg)){
+            let domainReg = /[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?/;
+            let domain = result_url.match(domainReg);
+            ips.push((domain && domain[0]) || result_ip);
+            //ports.push(v[4]=="udp"?`U:${result_port}`:result_port);
+            ports.push(result_port);
+          }
+        }
+        
+        goby.addScanIps(ips, 1);
+        goby.addScanPorts(ports, 1);
+        goby.showSuccessMessage($.t("Import scanned objects successfully"));
+        goby.closeIframeDia();
+      } else {
+        goby.showInformationMessage($.t("Import object cannot be empty"));
+      }
+    })
+
+    function IsLAN(ip) {
+        ip.toLowerCase();
+        if(ip=='localhost') return true;
+        var a_ip = 0;
+        if(ip == "") return false;
+        var aNum = ip.split("."); 
+        if(aNum.length != 4) return false;
+        a_ip += parseInt(aNum[0]) << 24;
+        a_ip += parseInt(aNum[1]) << 16;
+        a_ip += parseInt(aNum[2]) << 8;
+        a_ip += parseInt(aNum[3]) << 0;
+        a_ip=a_ip>>16 & 0xFFFF;
+        return( a_ip>>8 == 0x7F || a_ip>>8 == 0xA || a_ip== 0xC0A8 || (a_ip>=0xAC10 && a_ip<=0xAC1F) );
+    }
+  </script>
+</body>
+
+</html>

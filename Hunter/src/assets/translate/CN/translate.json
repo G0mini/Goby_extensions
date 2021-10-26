@@ -1,0 +1,26 @@
+{
+    "description":"将通过Qax_Hunter查询的IP和端口，快速导入goby进行扫描。",
+    "contributes":{
+        "configuration":{
+           "User": {
+                "description": "Hunter User"
+            },
+            "Key": {
+                "description": "Hunter Key"
+            },
+            "Size": {
+                "description": "查询返回到每页的数量，默认10页。"
+            } 
+        },
+        "views":{
+            "scanDia": [
+                {
+                    "title": "Hunter",
+                    "tips":"Hunter"
+                }
+            ]
+        }
+    },
+    "readme":"./README.md",
+    "changelog":"./CHANGELOG.md"
+}

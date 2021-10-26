@@ -1,0 +1,47 @@
+{
+	"name": "Hunter",
+	"publisher": "G0mini",
+	"description": "The IP and port queried by Hunter will be quickly imported into goby for scanning.",
+	"version": "0.1.0",
+	"icon": "src/assets/img/Hunter.png",
+	"engines": "1.6.170",
+	"initEvents": "",
+	"main": "./src/extension.js",
+	"contributes": {
+		"configuration": {
+			"Name": {
+				"type": "string",
+				"default": "",
+				"description": "HUNTER User"
+			},
+			"Key": {
+				"type": "string",
+				"default": "",
+				"description": "HUNTER Key"
+			},
+			"Size": {
+				"type": "string",
+				"default": "10",
+				"description": "The query returns the number of each page, the default is 100, and the maximum can be set to 100."
+			}
+		},
+		"views": {
+			"scanDia": [
+				{
+					"command": "Hunter",
+					"title": "Hunter",
+					"tips":"Hunter",
+					"icon": "src/assets/img/Hunter.png"
+				}
+			]
+		}
+	},
+	"language":{
+		"CN":"src/assets/translate/CN/translate.json"
+	},
+	"scripts": {},
+	"devDependencies": {},
+	"dependencies": {}
+}
+
+
