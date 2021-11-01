@@ -6,4 +6,7 @@
 3.在扫描配置弹窗里，点击标题栏的对应Logo，显示查询界面,在输入对应语法，获得搜索结果后，点击导入IP即可
 
 
-![](https://github.com/G0mini/Goby_extensions/blob/main/Hunter/src/assets/img/a.gif?raw=true)
+![](https://github.com/G0mini/Goby_extensions/blob/main/Mapping/src/assets/img/a.gif?raw=true)
+
+4.github:https://github.com/G0mini/Goby_extensions/tree/main/Mapping
+
