@@ -6,7 +6,7 @@ function activate(content) {
 		let key = goby.getConfiguration('Key');
 		if (email && key) {
 			let path = __dirname + "/Hunter.html"
-			let title = getTranslate('Hunter query');
+			let title = getTranslate('Mapping query');
 			goby.showIframeDia(path,title , "666", "500");
 		} else {
 			goby.showConfigurationDia();
@@ -22,7 +22,7 @@ function activate(content) {
 	})
 
 	function changeLang(iframe){
-		let title = getTranslate('Hunter query')
+		let title = getTranslate('Mapping query')
 		goby.showIframeDia(iframe.getAttribute('src'),title , "666", "500");
 	}
 	

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Qax_Hunter-查询</title>
+  <title>Mapping-查询</title>
   <link rel="stylesheet" href="assets/lib/layui/css/layui.css">
   <link rel="stylesheet" href="assets/css/base.css">
   <link rel="stylesheet" href="assets/font/iconfont.css">
@@ -61,18 +61,17 @@
     function lang(){
       //获取当前Languzge
       let language = goby.getLang();
-
       //判断翻译文件是否存在
       let translateState = fs.existsSync(goby.__dirname + '/assets/translate/' + language+'/html.json');
 
       //翻译文件存在则使用翻译文件,否则使用默认EN翻译
       let lang = translateState?language:'EN';
-
       let a = $.i18n.init({
         lng: language, //指定语言
         useCookie:false,
         resGetPath: './assets/translate/'+lang+'/html.json',//语言包的路径
       }, function(err, t) {
+		  
         if(!err){
           $('[data-i18n]').i18n(); // 通过选择器集体翻译
           return;
@@ -85,6 +84,7 @@
     
     //当lang改变时更新页面内容
     goby.bindEvent('onChangeLang',()=>{
+		console.log(4646465);
       lang();
     })
     
@@ -107,7 +107,7 @@
         }
       }
       let qbase64 = encode(content);
-      let page_size=size*10;
+      let page_size=size;
       let url = `https://hunter.qianxin.com/openApi/search?username=${email}&api-key=${key}&search=${qbase64}&page=${page}&page_size=${page_size}`
       $.ajax({
         async:false,
@@ -116,10 +116,10 @@
         contentType: 'application/x-www-form-urlencoded;charset=utf-8',
         dataType: "json",
         success(res) {
-          if(res.error){
+          if(res.error || res.code!=200){
             $(".loading").hide();
-            goby.showErrorMessage(res.errmsg)
-            $(".no-data").html(res.errmsg);
+            goby.showErrorMessage(res.message)
+            $(".no-data").html(res.message);
             results = [];
             let html = "";
             $("#ip-table tbody").html(html);
@@ -127,6 +127,7 @@
             $(".loading").hide();
             return;
           }
+		  
           results = res.data.arr;
           if (results && results.length > 0) {  
             let html = "";
@@ -153,10 +154,10 @@
               laypage.render({
                 elem: 'page', 
                 limit: size,
-                count: res.size,
+                count: res.data.total,
                 jump: function(obj, first) {
                   getData(obj.curr);
-                  console.log(res.size)
+                  console.log(res.data.total)
                 }
               });
             }

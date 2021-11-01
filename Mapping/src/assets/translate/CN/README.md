@@ -6,4 +6,4 @@
 3.在扫描配置弹窗里，点击标题栏的对应Logo，显示查询界面,在输入对应语法，获得搜索结果后，点击导入IP即可
 
 
-![](https://img13.360buyimg.com/ddimg/jfs/t1/215842/14/1854/64430/6177b124E4134930f/bb67a065087b68d2.jpg)
+![](https://github.com/G0mini/Goby_extensions/blob/main/Hunter/src/assets/img/a.gif?raw=true)
