@@ -1,7 +1,7 @@
 ## Quick start
 1.Install
 
-2.Configure the Mapping account number, key, the number of queries returned to each page Size
+2.Configure the Hunter account number, key, the number of queries returned to each page Size
 
 3.In the scan configuration pop-up window, click the corresponding Logo in the title bar to display the query interface. After entering the corresponding syntax and obtaining the search results, click to import IPs.
 

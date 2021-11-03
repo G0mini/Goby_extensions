@@ -1,5 +1,5 @@
 {
-    "description":"将通过Qax_Hunter查询的IP和端口，快速导入goby进行扫描。",
+    "description":"将通过Hunter查询的IP和端口，快速导入goby进行扫描。",
     "contributes":{
         "configuration":{
            "User": {
